@@ -1,13 +1,16 @@
 import "dotenv/config";
-import axios from "axios";
 import readline from "readline";
+import OpenAI from "openai";
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
 
-const apiKey = process.env.OPENAI_API_KEY;
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
 const conversationHistory = [];
 
 async function generateContentWithOpenAI(prompt, history) {
@@ -22,27 +25,15 @@ async function generateContentWithOpenAI(prompt, history) {
             content: prompt,
         });
 
-        const response = await axios.post(
-            "https://api.openai.com/v1/chat/completions",
-            {
-                model: "gpt-4.1-nano-2025-04-14",
-                messages: messages,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                },
-            },
-        );
+        const response = await openai.chat.completions.create({
+            model: "gpt-4.1-nano-2025-04-14",
+            messages: messages,
+        });
 
-        const reply = response.data.choices[0].message.content;
+        const reply = response.choices[0].message.content;
         return reply;
     } catch (error) {
         console.error("Erro ao chamar a API OpenAI:", error);
-        if (error.response) {
-            console.error("Dados da resposta:", error.response.data);
-        }
         return "Ocorreu um erro ao processar sua solicitação.";
     }
 }
